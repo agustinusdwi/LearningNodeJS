@@ -5,12 +5,6 @@ const bcrypt = require('bcrypt');
 
 
 exports.loginUser = function (req, res) {
-
-    let dataLogin = [
-        name = req.body.name,
-        password = bcrypt.hashSync(req.body.password, 10)
-    ]
-    console.log(dataLogin)
     connection.query('SELECT * FROM USERS WHERE name= ? ORDER BY ID DESC LIMIT 1', [req.body.name], (error, rows, fields) => {
         if (error) {
             response.result(res, error, 500);
@@ -18,11 +12,11 @@ exports.loginUser = function (req, res) {
             if (rows) {
                 user = rows[0];
                 // must compare
-                if(bcrypt.compareSync(req.body.password, user.password)){
+                if (bcrypt.compareSync(req.body.password, user.password)) {
                     response.result(res, user, 200);
                 } else {
+                    console.log('success login');
                     response.result(res, user, 200);
-                    console.log('error : ' + user.password + '  ' + bcrypt.hashSync(req.body.password, 10))
                 }
             }
         }
@@ -65,7 +59,9 @@ exports.addUsers = (req, res) => {
 };
 
 exports.updateUsers = function (req, res) {
-    connection.query('UPDATE USERS SET name=?, email=?, password=? WHERE ID=?', [req.body.name, req.body.email, req.body.password, req.params.id], (error, result) => {
+    let hashPassword = bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(9));
+    connection.query('UPDATE USERS SET name= ?, email=?,  age=?, password=? WHERE ID=?',
+         [req.body.name, req.body.email, req.body.age, hashPassword, req.params.id], (error, result) => {
         if (error) {
             console.log(error);
             response.result(res, error, 500);
