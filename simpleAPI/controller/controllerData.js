@@ -3,6 +3,32 @@ var connection = require('../connection/config');
 
 const bcrypt = require('bcrypt');
 
+
+exports.loginUser = function (req, res) {
+
+    let dataLogin = [
+        name = req.body.name,
+        password = bcrypt.hashSync(req.body.password, 10)
+    ]
+    console.log(dataLogin)
+    connection.query('SELECT * FROM USERS WHERE name= ? ORDER BY ID DESC LIMIT 1', [req.body.name], (error, rows, fields) => {
+        if (error) {
+            response.result(res, error, 500);
+        } else {
+            if (rows) {
+                user = rows[0];
+                // must compare
+                if(bcrypt.compareSync(req.body.password, user.password)){
+                    response.result(res, user, 200);
+                } else {
+                    response.result(res, user, 200);
+                    console.log('error : ' + user.password + '  ' + bcrypt.hashSync(req.body.password, 10))
+                }
+            }
+        }
+    });
+};
+
 exports.users = function (req, res) {
     connection.query('SELECT * FROM USERS', (error, rows, fields) => {
         if (error) {
@@ -23,8 +49,8 @@ exports.addUsers = (req, res) => {
     if (errors) {
         response.result(res, errors, 400);
     } else {
-        let hashPassword = bcrypt.hashSync(req.body.password, 10);
-        var records = [
+        let hashPassword = bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(9));
+        let records = [
             [req.body.name, req.body.age, req.body.email, hashPassword]
         ]
         connection.query('INSERT INTO USERS (name,age,email,password) VALUES ?', [records], (error, result) => {
