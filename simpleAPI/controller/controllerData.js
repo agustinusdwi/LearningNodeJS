@@ -1,5 +1,5 @@
-var response = require('../response/res');
-var connection = require('../connection/config');
+const response = require('../response/res');
+const connection = require('../connection/config');
 
 const bcrypt = require('bcrypt');
 
@@ -45,7 +45,7 @@ exports.addUsers = (req, res) => {
     req.checkBody("age", "age does not exist").exists();
     req.checkBody("password", "password does not exist").exists();
 
-    var errors = req.validationErrors();
+    let errors = req.validationErrors();
     if (errors) {
         response.result(res, errors, 400);
     } else {
