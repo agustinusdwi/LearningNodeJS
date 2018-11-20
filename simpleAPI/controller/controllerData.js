@@ -1,5 +1,5 @@
 const response = require('../response/res');
-const connection = require('../connection/config');
+const connection = require('../config/connectionDatabase');
 const bcrypt = require('bcrypt');
 
 const jwt = require('jsonwebtoken');
