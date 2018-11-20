@@ -25,11 +25,7 @@ exports.loginUser = function (req, res) {
 };
 
 exports.users = function (req, res) {
-    var token = req.headers['x-access-token'];
-    if (!token) {
-        response.result(res, { auth: false, message: 'No token provided.' }, 401);
-    }
-
+    let token = tokenJwtProcess(req, res);
     jwt.verify(token, config.secret, function (err, decoded) {
         if (err) {
             response.result(res, { auth: false, message: 'Failed to authenticate token.' }, 500);
@@ -46,28 +42,36 @@ exports.users = function (req, res) {
 };
 
 exports.addUsers = (req, res) => {
-    req.checkBody("email", "email address does not exist").exists();
-    req.checkBody("name", "name does not exist").exists();
-    req.checkBody("age", "age does not exist").exists();
-    req.checkBody("password", "password does not exist").exists();
+    let token = tokenJwtProcess(req, res);
+    jwt.verify(token, config.secret, function (err, decoded) {
+        if (err) {
+            response.result(res, { auth: false, message: 'Failed to authenticate token.' }, 500);
+        } else {
+            req.checkBody("email", "email address does not exist").exists();
+            req.checkBody("name", "name does not exist").exists();
+            req.checkBody("age", "age does not exist").exists();
+            req.checkBody("password", "password does not exist").exists();
 
-    let errors = req.validationErrors();
-    if (errors) {
-        response.result(res, errors, 400);
-    } else {
-        let hashPassword = bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(9));
-        let records = [
-            [req.body.name, req.body.age, req.body.email, hashPassword]
-        ]
-        connection.query('INSERT INTO USERS (name,age,email,password) VALUES ?', [records], (error, result) => {
-            if (error) {
-                console.log(error);
-                response.result(res, error, 500);
+            let errors = req.validationErrors();
+            if (errors) {
+                response.result(res, errors, 400);
             } else {
-                response.result(res, result, 200);
+                let hashPassword = bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(9));
+                let records = [
+                    [req.body.name, req.body.age, req.body.email, hashPassword]
+                ]
+                connection.query('INSERT INTO USERS (name,age,email,password) VALUES ?', [records], (error, result) => {
+                    if (error) {
+                        console.log(error);
+                        response.result(res, error, 500);
+                    } else {
+                        response.result(res, result, 200);
+                    }
+                });
             }
-        });
-    }
+        }
+    });
+
 };
 
 exports.updateUsers = function (req, res) {
@@ -97,3 +101,11 @@ exports.deleteUsers = function (req, res) {
 exports.index = function (req, res) {
     response.result(res, "mysql 8", 200);
 };
+
+function tokenJwtProcess(req, res) {
+    var token = req.headers['x-access-token'];
+    if (!token) {
+        response.result(res, { auth: false, message: 'No token provided.' }, 401);
+    }
+    return token;
+}
