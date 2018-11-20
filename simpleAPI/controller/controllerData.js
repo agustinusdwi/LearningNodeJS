@@ -17,47 +17,56 @@ exports.loginUser = function (req, res) {
 
 exports.users = function (req, res) {
     let token = tokenJwtProcess(req, res);
-    jwt.verify(token, config.secret, function (err, decoded) {
-        if (err) {
-            response.result(res, { auth: false, message: 'Failed to authenticate token.' }, 500);
-        } else {
-            fetchData(req, res);
-        }
-    });
+    if(token){
+        jwt.verify(token, config.secret, function (err, decoded) {
+            if (err) {
+                response.result(res, { auth: false, message: 'Failed to authenticate token.' }, 500);
+            } else {
+                fetchData(req, res);
+            }
+        });
+    }
 };
 exports.addUsers = (req, res) => {
     let token = tokenJwtProcess(req, res);
-    jwt.verify(token, config.secret, function (err, decoded) {
-        if (err) {
-            response.result(res, { auth: false, message: 'Failed to authenticate token.' }, 500);
-        } else {
-            addData(req, res);
-        }
-    });
-
+    if(token){
+        jwt.verify(token, config.secret, function (err, decoded) {
+            if (err) {
+                response.result(res, { auth: false, message: 'Failed to authenticate token.' }, 500);
+            } else {
+                addData(req, res);
+            }
+        });
+    }
 };
 
 exports.updateUsers = function (req, res) {
     let token = tokenJwtProcess(req, res);
-
-    jwt.verify(token, config.secret, function (err, decoded) {
-        if (err) {
-            response.result(res, { auth: false, message: 'Failed to authenticate token.' }, 500);
-        } else {
-            updateData(req, res);
-        }
-    });
+    if(token){
+        jwt.verify(token, config.secret, function (err, decoded) {
+            if (err) {
+                response.result(res, { auth: false, message: 'Failed to authenticate token.' }, 500);
+            } else {
+                updateData(req, res);
+            }
+        });
+    }
 };
 
 exports.deleteUsers = function (req, res) {
-    connection.query('DELETE FROM USERS WHERE ID=?', [req.params.id], (error, result) => {
-        if (error) {
-            console.log(error);
-            response.result(res, error, 500);
-        } else {
-            response.result(res, result, 200);
-        }
-    });
+    let token = tokenJwtProcess(req, res);
+    if(token){
+        jwt.verify(token, config.secret, function (err, decoded) {
+            connection.query('DELETE FROM USERS WHERE ID=?', [req.params.id], (error, result) => {
+                if (error) {
+                    console.log(error);
+                    response.result(res, error, 500);
+                } else {
+                    response.result(res, result, 200);
+                }
+            });
+        });
+    }
 };
 
 exports.index = function (req, res) {
@@ -81,6 +90,7 @@ function tokenJwtProcess(req, res) {
     var token = req.headers['x-access-token'];
     if (!token) {
         response.result(res, { auth: false, message: 'No token provided.' }, 401);
+        return;
     }
     return token;
 }
@@ -97,12 +107,7 @@ function fetchData(req, res) {
 
 
 function addData(req, res) {
-    req.checkBody("email", "email address does not exist").exists();
-    req.checkBody("name", "name does not exist").exists();
-    req.checkBody("age", "age does not exist").exists();
-    req.checkBody("password", "password does not exist").exists();
-
-    let errors = req.validationErrors();
+    let errors = checkErrorRegister(req);
     if (errors) {
         response.result(res, errors, 400);
     } else {
@@ -119,6 +124,15 @@ function addData(req, res) {
             }
         });
     }
+}
+
+function checkErrorRegister(req){
+    req.checkBody("email", "email address does not exist").exists();
+    req.checkBody("name", "name does not exist").exists();
+    req.checkBody("age", "age does not exist").exists();
+    req.checkBody("password", "password does not exist").exists();
+
+    return req.validationErrors();
 }
 
 function updateData(req, res) {
