@@ -33,14 +33,15 @@ exports.users = function (req, res) {
     jwt.verify(token, config.secret, function (err, decoded) {
         if (err) {
             response.result(res, { auth: false, message: 'Failed to authenticate token.' }, 500);
+        } else {
+            connection.query('SELECT * FROM USERS', (error, rows, fields) => {
+                if (error) {
+                    response.result(res, rows, 500);
+                } else {
+                    response.result(res, rows, 200);
+                }
+            });
         }
-        connection.query('SELECT * FROM USERS', (error, rows, fields) => {
-            if (error) {
-                response.result(res, rows, 500);
-            } else {
-                response.result(res, rows, 200);
-            }
-        });
     });
 };
 
