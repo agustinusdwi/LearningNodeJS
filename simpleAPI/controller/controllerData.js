@@ -45,7 +45,7 @@ exports.updateUsers = function (req, res) {
     if(token){
         jwt.verify(token, config.secret, function (err, decoded) {
             if (err) {
-                response.result(res, { auth: false, message: 'Failed to authenticate token. This token has expired.' }, 500);
+                response.result(res, { auth: false, message: 'Failed to authenticate token. This token has expired.' }, 401);
             } else {
                 updateData(req, res);
             }
