@@ -20,7 +20,7 @@ exports.users = function (req, res) {
     if(token){
         jwt.verify(token, config.secret, function (err, decoded) {
             if (err) {
-                response.result(res, { auth: false, message: 'Failed to authenticate token.' }, 500);
+                response.result(res, { auth: false, message: 'Failed to authenticate token. This token has expired.' }, 401);
             } else {
                 fetchData(req, res);
             }
@@ -32,7 +32,7 @@ exports.addUsers = (req, res) => {
     if(token){
         jwt.verify(token, config.secret, function (err, decoded) {
             if (err) {
-                response.result(res, { auth: false, message: 'Failed to authenticate token.' }, 500);
+                response.result(res, { auth: false, message: 'Failed to authenticate token. This token has expired.' }, 401);
             } else {
                 addData(req, res);
             }
@@ -45,7 +45,7 @@ exports.updateUsers = function (req, res) {
     if(token){
         jwt.verify(token, config.secret, function (err, decoded) {
             if (err) {
-                response.result(res, { auth: false, message: 'Failed to authenticate token.' }, 500);
+                response.result(res, { auth: false, message: 'Failed to authenticate token. This token has expired.' }, 500);
             } else {
                 updateData(req, res);
             }
@@ -73,12 +73,12 @@ exports.index = function (req, res) {
     response.result(res, "mysql 8", 200);
 };
 
-function loginData(req, res, rows){
+async function loginData(req, res, rows){
     user = rows[0];
     // must compare
     if (bcrypt.compareSync(req.body.password, user.password)) {
         var token = jwt.sign({ id: rows.id }, config.secret, {
-            expiresIn: 86400 // expires in 24 hours
+            expiresIn: 60 // expires in 1 minute
         });
         response.result(res, { auth: true, token: token }, 200);
     } else {
@@ -95,7 +95,7 @@ function tokenJwtProcess(req, res) {
     return token;
 }
 
-function fetchData(req, res) {
+async function fetchData(req, res) {
     connection.query('SELECT * FROM USERS', (error, rows, fields) => {
         if (error) {
             response.result(res, error, 500);
@@ -106,7 +106,7 @@ function fetchData(req, res) {
 }
 
 
-function addData(req, res) {
+async function addData(req, res) {
     let errors = checkErrorRegister(req);
     if (errors) {
         response.result(res, errors, 400);
@@ -117,7 +117,6 @@ function addData(req, res) {
         ]
         connection.query('INSERT INTO USERS (name,age,email,password) VALUES ?', [records], (error, result) => {
             if (error) {
-                console.log(error);
                 response.result(res, error, 500);
             } else {
                 response.result(res, result, 200);
@@ -135,7 +134,7 @@ function checkErrorRegister(req){
     return req.validationErrors();
 }
 
-function updateData(req, res) {
+async function updateData(req, res) {
     let hashPassword = bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(9));
     connection.query('UPDATE USERS SET name= ?, email=?,  age=?, password=? WHERE ID=?',
         [req.body.name, req.body.email, req.body.age, hashPassword, req.params.id], (error, result) => {
