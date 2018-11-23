@@ -20,7 +20,7 @@ exports.users = function (req, res) {
     if(token){
         jwt.verify(token, config.secret, function (err, decoded) {
             if (err) {
-                response.result(res, { auth: false, message: 'Failed to authenticate token. This token has expired.' }, 401);
+                response.result(res, { auth: false, message: 'Failed to authenticate token. ' + err }, 401);
             } else {
                 fetchData(req, res);
             }
@@ -32,7 +32,7 @@ exports.addUsers = (req, res) => {
     if(token){
         jwt.verify(token, config.secret, function (err, decoded) {
             if (err) {
-                response.result(res, { auth: false, message: 'Failed to authenticate token. This token has expired.' }, 401);
+                response.result(res, { auth: false, message: 'Failed to authenticate token. ' }, 401);
             } else {
                 addData(req, res);
             }
@@ -45,7 +45,7 @@ exports.updateUsers = function (req, res) {
     if(token){
         jwt.verify(token, config.secret, function (err, decoded) {
             if (err) {
-                response.result(res, { auth: false, message: 'Failed to authenticate token. This token has expired.' }, 401);
+                response.result(res, { auth: false, message: 'Failed to authenticate token. ' }, 401);
             } else {
                 updateData(req, res);
             }
